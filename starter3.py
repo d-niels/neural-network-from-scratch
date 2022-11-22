@@ -17,15 +17,6 @@ def create_transforms(arr):
 
 # Apply transforms to the columns of data to regularize each column
 def transform(features, t):
-    """
-    Applies transforms to every column of features to normalize
-
-    Args:
-        features (np.ndarray): array containing inputs of size
-                (n_samples, n_features).
-    Returns:
-        features_t (np.ndarray): transformed array
-    """
     for i in range(features.shape[1]):
         if t[i][1] == 0:
             features[:, i] = 0 * features[:, i]
