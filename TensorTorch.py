@@ -379,11 +379,12 @@ class Trainer(object):
 
             
     def fit(self, x_train: np.ndarray, y_train: np.ndarray,
-            x_test: np.ndarray, y_test: np.ndarray,
+            x_valid: np.ndarray, y_valid: np.ndarray,
             epochs: int=100,
             batch_size: int=32,
             seed: int = 1,
-            restart: bool = True):
+            restart: bool = True,
+            early_stop: bool = True):
         """
         Runs training epochs over the network
         """
@@ -401,16 +402,16 @@ class Trainer(object):
                 self.net.train_batch(X_batch, y_batch)
                 self.optim.step()
 
-            test_preds = self.net.forward(x_test)
-            loss = self.net.loss.forward(test_preds, y_test)
+            test_preds = self.net.forward(x_valid)
+            loss = self.net.loss.forward(test_preds, y_valid)
 
-            if loss < self.best_loss:
-                print(f"Epoch {e+1}: val_loss: {loss:.3f}")
+            print(f"Epoch {e+1}: val_acc: {round(self.evaluate(x_valid, y_valid), 3)}")
+            if loss < self.best_loss:      
                 self.best_loss = loss
-            else:
-                print(f"Loss increased after epoch {e+1}, training haulted")
+            elif early_stop:
                 self.net = last_model
                 setattr(self.optim, 'net', self.net)
+                print(f"Loss increased after epoch {e+1}, training haulted")
                 break
     
     def evaluate(self, x_test: np.ndarray, y_test: np.ndarray) -> float:

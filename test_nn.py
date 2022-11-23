@@ -73,8 +73,8 @@ def test_network():
         loss = tt.SoftmaxCrossEntropyLoss()
     )
     trainer = tt.Trainer(three_model, tt.SGD(lr=0.1))
-    trainer.fit(x_train, y_train, x_valid, y_valid, epochs=50, batch_size=len(x_test), eval_every=1)
-    print(trainer.evaluate(x_test, y_test))
+    trainer.fit(x_train, y_train, x_valid, y_valid, epochs=100, batch_size=1, early_stop=False)
+    print('testing accuracy:', trainer.evaluate(x_test, y_test))
 
 if __name__ == '__main__':
     test_network()
