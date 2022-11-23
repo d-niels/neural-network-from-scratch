@@ -16,6 +16,7 @@ def assert_dimensionality(arr1: np.ndarray, arr2: np.ndarray):
 def softmax(x, axis=-1):
     return np.exp(x - logsumexp(x, axis=axis, keepdims=True))
 
+
 class Encoder():
     """
     Encodes labels
@@ -62,10 +63,10 @@ class Operation():
         return self.input_grad
     
     def _output(self) -> np.ndarray:
-        raise NotImplementedError()
+        pass
     
     def _input_grad(self, output_grad: np.ndarray) -> np.ndarray:
-        raise NotImplementedError()
+        pass
 
 
 class ParamOperation(Operation):
@@ -89,7 +90,7 @@ class ParamOperation(Operation):
         return self.input_grad
     
     def _param_grad(self, output_grad: np.ndarray) -> np.ndarray:
-        raise NotImplementedError()
+        pass
 
 
 class WeightMultiply(ParamOperation):
@@ -153,15 +154,15 @@ class Layer():
     Basic rules that layers must follow
     """
     def __init__(self, neurons: int):
-        self.neurons = neurons
-        self.first = True
+        self.neurons: int = neurons
+        self.first: bool = True
         self.params: list[np.ndarray] = []
         self.param_grads: list[np.ndarray] = []
         self.operations: list[Operation] = []
-        self.seed = None
+        self.seed: int = None
 
-    def _setup_layer(self, num_in: int) -> None:
-        raise NotImplementedError()
+    def _setup_layer(self, num: int):
+        pass
 
     def forward(self, input_: np.ndarray) -> np.ndarray:
         if self.first:
@@ -355,86 +356,62 @@ class SGD(Optimizer):
 
 
 class Trainer(object):
-    '''
+    """
     Trains a neural network
-    '''
+    """
     def __init__(self, net: NeuralNetwork, optim: Optimizer):
-        '''
+        """
         Requires a neural network and an optimizer in order for training to occur. 
         Assign the neural network as an instance variable to the optimizer.
-        '''
+        """
         self.net = net
         self.optim = optim
         self.best_loss = 1e9
         setattr(self.optim, 'net', self.net)
         
-    def generate_batches(self, X: np.ndarray, y: np.ndarray, size: int = 32):
-        '''
+    def generate_batches(self, x: np.ndarray, y: np.ndarray, size: int = 32):
+        """
         Generates batches for training 
-        '''
-        assert X.shape[0] == y.shape[0], \
-        '''
-        features and target must have the same number of rows, instead
-        features has {0} and target has {1}
-        '''.format(X.shape[0], y.shape[0])
-
-        N = X.shape[0]
-
-        for ii in range(0, N, size):
-            X_batch, y_batch = X[ii:ii+size], y[ii:ii+size]
-
-            yield X_batch, y_batch
+        """
+        for i in range(0, x.shape[0], size):
+            xi, yi = x[i:i+size], y[i:i+size]
+            yield xi, yi
 
             
-    def fit(self, X_train: np.ndarray, y_train: np.ndarray,
-            X_test: np.ndarray, y_test: np.ndarray,
+    def fit(self, x_train: np.ndarray, y_train: np.ndarray,
+            x_test: np.ndarray, y_test: np.ndarray,
             epochs: int=100,
-            eval_every: int=10,
             batch_size: int=32,
             seed: int = 1,
             restart: bool = True):
-        '''
-        Fits the neural network on the training data for a certain number of epochs.
-        Every "eval_every" epochs, it evaluated the neural network on the testing data.
-        '''
-
+        """
+        Runs training epochs over the network
+        """
         np.random.seed(seed)
         if restart:
             for layer in self.net.layers:
                 layer.first = True
-
             self.best_loss = 1e9
 
         for e in range(epochs):
+            last_model = deepcopy(self.net)
+            batch_generator = self.generate_batches(x_train, y_train, batch_size)
 
-            if (e+1) % eval_every == 0:
-                
-                # for early stopping
-                last_model = deepcopy(self.net)
-
-            batch_generator = self.generate_batches(X_train, y_train,
-                                                    batch_size)
-
-            for ii, (X_batch, y_batch) in enumerate(batch_generator):
-
+            for (X_batch, y_batch) in batch_generator:
                 self.net.train_batch(X_batch, y_batch)
-
                 self.optim.step()
 
-            if (e+1) % eval_every == 0:
+            test_preds = self.net.forward(x_test)
+            loss = self.net.loss.forward(test_preds, y_test)
 
-                test_preds = self.net.forward(X_test)
-                loss = self.net.loss.forward(test_preds, y_test)
-
-                if loss < self.best_loss:
-                    print(f"Validation loss after {e+1} epochs is {loss:.3f}")
-                    self.best_loss = loss
-                else:
-                    print(f"""Loss increased after epoch {e+1}, final loss was {self.best_loss:.3f}, using the model from epoch {e+1-eval_every}""")
-                    self.net = last_model
-                    # ensure self.optim is still updating self.net
-                    setattr(self.optim, 'net', self.net)
-                    break
+            if loss < self.best_loss:
+                print(f"Epoch {e+1}: val_loss: {loss:.3f}")
+                self.best_loss = loss
+            else:
+                print(f"Loss increased after epoch {e+1}, training haulted")
+                self.net = last_model
+                setattr(self.optim, 'net', self.net)
+                break
     
     def evaluate(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
         """
