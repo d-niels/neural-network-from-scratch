@@ -32,17 +32,6 @@ def test_network():
     test = read_insurability('./data/three/three_test.csv')
     
     # insert code to train simple FFNN and produce evaluation metrics
-    num_epochs = 500
-    results = {}
-
-    fig_acc, axs_acc = plt.subplots(2, 2)
-    fig_acc.set_size_inches(18.5, 10.5)
-    fig_acc.tight_layout(pad=5.0)
-
-    fig_loss, axs_loss = plt.subplots(2, 2)
-    fig_loss.set_size_inches(18.5, 10.5)
-    fig_loss.tight_layout(pad=5.0)
-
     x_train = np.array([x[1] for x in train])
     y_train = np.array([x[0][0] for x in train])
 
