@@ -265,10 +265,10 @@ class Loss():
         return self.input_grad
 
     def _output(self) -> float:
-        raise NotImplementedError()
+        pass
 
     def _input_grad(self) -> np.ndarray:
-        raise NotImplementedError()
+        pass
 
 
 class SoftmaxCrossEntropyLoss(Loss):
@@ -340,7 +340,7 @@ class Optimizer():
         self.lr = lr
 
     def step(self):
-        raise NotImplementedError
+        pass
 
 
 class SGD(Optimizer):
