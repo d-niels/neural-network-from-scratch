@@ -38,7 +38,7 @@ def read_insurability(file_name):
             count = count + 1
     return(data)
 
-def classify_insurability_manual():
+def classify_insurability():
     
     train = read_insurability('./data/three/three_train.csv')
     valid = read_insurability('./data/three/three_valid.csv')
@@ -80,4 +80,4 @@ def classify_insurability_manual():
     print('testing accuracy:', trainer.evaluate(x_test, y_test))
     
 if __name__ == "__main__":
-    classify_insurability_manual()
+    classify_insurability()
